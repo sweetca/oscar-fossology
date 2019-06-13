@@ -1,0 +1,14 @@
+{
+  "local": {
+    "mongo": "mongodb://127.0.0.1:27017/oss",
+    "db": "oss",
+    "job": "http://localhost:8081/",
+    "repositoryDir": "/tmp/codescoop/repositories"
+  },
+  "prod": {
+    "mongo": "mongodb://{LOGIN}:{PASS}@127.0.0.1:27017/oss",
+    "db": "oss",
+    "job": "http://127.0.0.1:8081/",
+    "repositoryDir": "/tmp/codescoop/repositories"
+  }
+}
