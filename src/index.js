@@ -5,9 +5,10 @@ const scheduler = require('node-schedule');
 const cp = require('child-process-promise');
 const plimit = require('promise-limit');
 const limit = plimit(50);
+
 const jobApi = require('./job/job').jobApi;
 const mgoApi = require('./mgo/mgo').mgoApi;
-const config = require('../config/config').config;
+const config = require('./config/config').config;
 
 console.log('');
 console.log('');

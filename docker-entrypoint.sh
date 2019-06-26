@@ -43,4 +43,4 @@ echo
 cd /fossology
 export TZ=UTC
 export PATH=/usr/local/lib/nodejs/node-v10.15.3-linux-x64/bin:$PATH
-PROFILE=$PROFILE node index.js
+PROFILE=$PROFILE node src/index.js

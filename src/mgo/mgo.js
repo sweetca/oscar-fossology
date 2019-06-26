@@ -1,8 +1,8 @@
 // Copyright (c) Codescoop Oy 2019. Licensed under the MIT license.
 // SPDX-License-Identifier: MIT
 
-const config = require('../config/config').config;
 const mgo = require('mongodb');
+const config = require('../config/config').config;
 const MongoClient = mgo.MongoClient;
 const licenseDocCollection = 'gitLicenseScan';
 const gitRepoCollection = 'gitRepo';
@@ -10,9 +10,10 @@ const jobCollection = 'job';
 
 let db = null;
 const client = new MongoClient(config.mongoUrl);
+
 client.connect((err) => {
     if (err) {
-        console.error('mgo connect', err);
+        console.error('mongo client error', err);
         return;
     }
     db = client.db(config.db);
