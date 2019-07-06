@@ -7,11 +7,33 @@ const config = require('../config/config').config;
 const jobApi = {
     get: async () => {
         const options = {
-            method: "GET",
+            method: 'GET',
             uri: config.getJobUrl,
             headers: {
                 'Accept': 'application/json'
             }
+        };
+        return await request(options);
+    },
+    finish: async (id) => {
+        const options = {
+            method: 'PUT',
+            uri: config.getFinishJob(id),
+            headers: {
+                'Accept': 'application/json'
+            }
+        };
+        return await request(options);
+    },
+    upload: async (scan, component, version) => {
+        const options = {
+            method: 'POST',
+            uri: config.getUploadScan(component, version),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'text/plain'
+            },
+            body: JSON.stringify(scan)
         };
         return await request(options);
     }

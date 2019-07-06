@@ -3,15 +3,18 @@
 
 const profileConst = require('./profile.json');
 
-const {PROFILE, MONGO_LOGIN, MONGO_PASS, OSCAR_DIR} = process.env;
+const {PROFILE} = process.env;
 
 const profileString = PROFILE || 'local';
-console.log(`Install profile for fossy : ${profileString}`);
+console.log(`Install profile for fossology : ${profileString}`);
 
 let config = profileConst[profileString];
-config.mongoUrl = config.mongo.replace('{LOGIN}', MONGO_LOGIN).replace('{PASS}', MONGO_PASS);
-config.getJobUrl = `${config.job}find_job?type=${config.jobType}`;
-config.finishJobUrl = `${config.job}finish_job/`;
-config.repositoryDir = OSCAR_DIR ? OSCAR_DIR : config.repositoryDir;
+config.getJobUrl = `${config.job}/find_job/${config.jobType}/oscar-fossology-1`;
+config.getFinishJob = (jobId) => {
+    return `${config.job}/finish_job/${jobId}/oscar-fossology-1`;
+};
+config.getUploadScan = (component, version) => {
+    return `${config.job}/fossology/${component}/${version}`;
+};
 
 exports.config = config;

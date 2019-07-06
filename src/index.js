@@ -7,8 +7,6 @@ const plimit = require('promise-limit');
 const limit = plimit(50);
 
 const jobApi = require('./job/job').jobApi;
-const mgoApi = require('./mgo/mgo').mgoApi;
-const config = require('./config/config').config;
 
 console.log('');
 console.log('');
@@ -21,39 +19,24 @@ scheduler.scheduleJob('*/1 * * * *', async () => {
     if (!processing) {
         processing = true;
         try {
-            let jobsData = await jobApi.get();
-            jobsData = JSON.parse(jobsData);
-            if (jobsData && jobsData.length > 0) {
-                console.log('');
-                console.log('');
-
-                const job = jobsData[0];
+            let job = await jobApi.get();
+            if (job) {
+                job = JSON.parse(job);
                 console.log(`job started : ${job.id}`);
-                const scanId = job.payload.scanId;
-                await mgoApi.lockLicenseScan(scanId);
 
-                const scans = await mgoApi.getLicenseScan(scanId);
-                if (scans.length === 0) {
-                    console.error('license scan not found');
-                    processing = false;
-                    return;
-                }
-
-                const licenseScan = scans[0];
-
-                const path = `${config.repositoryDir}/${job.payload.componentType}/${job.payload.gitId}`;
+                const path = job.payload.componentPath;
                 const result = await analyzeGitRepo(path);
 
                 if (result.error) {
-                    await mgoApi.updateLicenseScan(scanId, '', 'error', result.error);
-                    console.error(`component scan error : ${result.error}`);
+                    console.error(`component scan error : ${job.payload.component} : ${result.error}`);
                 } else {
-                    const str = JSON.stringify(result);
-                    await mgoApi.updateLicenseScan(scanId, str, 'success', '');
-                    await mgoApi.updateMainLicense(licenseScan.repoId, result);
-                    console.log(`component scan success : ${str.length}`);
+                    console.log(`component scan success : ${job.payload.component}`);
                 }
-                await mgoApi.finishJob(job.id);
+                await jobApi.upload(result, job.payload.component, job.payload.componentVersion);
+                console.log(`component scan uploaded : ${job.payload.component}`);
+
+                await jobApi.finish(job.id);
+                console.log(`job finished : ${job.id}`);
             } else {
                 console.log('no job in db');
             }
@@ -69,14 +52,16 @@ const analyzeGitRepo = async (pathToComponent) => {
     console.log(`analyze repo : ${pathToComponent}`);
 
     const resultData = {
-        "error": '',
-        "main-license": {},
-        "file-licenses": []
+        'error': '',
+        'main-license': {},
+        'file-licenses': []
     };
 
     await cp.exec('ls', {cwd: pathToComponent})
         .then(() => console.log(`cd : ${pathToComponent}`)).catch(err => resultData.error = err.toString())
-        .then(() => mainLicenseForRepo(pathToComponent).then(output => {resultData["main-license"] = output})).catch(err => resultData.error = err.toString())
+        .then(() => mainLicenseForRepo(pathToComponent).then(output => {
+            resultData['main-license'] = output
+        })).catch(err => resultData.error = err.toString())
         .then(() => cp.exec(`find ${pathToComponent} -name .git -prune -or -type f -print`, {maxBuffer: 10000 * 1024}).then(pickStdout))
         .then(output => output.split('\n'))
         .then(files => {
@@ -85,16 +70,16 @@ const analyzeGitRepo = async (pathToComponent) => {
                 files.map((file) => limit(() => {
                     return analyzeFile(file).then(output => {
                         const row = {
-                            "file": JSON.stringify(file.replace(pathToComponent, '')),
-                            "output": output
+                            'file': JSON.stringify(file.replace(pathToComponent, '')),
+                            'output': output
                         };
-                        resultData["file-licenses"].push(row);
+                        resultData['file-licenses'].push(row);
                     })
                 }));
             return Promise.all(promises);
         }).catch(err => resultData.error = err.toString())
         .then(() => {
-            console.log(`component scan complete ${url}`);
+            console.log(`component scan complete ${pathToComponent}`);
         });
 
     return resultData;
