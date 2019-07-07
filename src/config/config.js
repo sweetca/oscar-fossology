@@ -14,7 +14,10 @@ config.getFinishJob = (jobId) => {
     return `${config.job}/finish_job/${jobId}/oscar-fossology-1`;
 };
 config.getUploadScan = (component, version) => {
-    return `${config.job}/fossology/${component}/${version}`;
+    return `${config.job}/fossology/result/${component}/${version}`;
+};
+config.getUploadError = (component, version) => {
+    return `${config.job}/fossology/error/${component}/${version}`;
 };
 
 exports.config = config;

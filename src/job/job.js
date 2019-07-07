@@ -36,6 +36,18 @@ const jobApi = {
             body: JSON.stringify(scan)
         };
         return await request(options);
+    },
+    error: async (error, component, version) => {
+        const options = {
+            method: 'POST',
+            uri: config.getUploadError(component, version),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'text/plain'
+            },
+            body: error
+        };
+        return await request(options);
     }
 };
 

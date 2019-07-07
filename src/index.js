@@ -15,7 +15,8 @@ console.log('');
 console.log('');
 
 let processing = false;
-scheduler.scheduleJob('*/1 * * * *', async () => {
+
+const iteration = async () => {
     if (!processing) {
         processing = true;
         try {
@@ -23,30 +24,37 @@ scheduler.scheduleJob('*/1 * * * *', async () => {
             if (job) {
                 job = JSON.parse(job);
                 console.log(`job started : ${job.id}`);
+                const component = job.payload.component;
+                const version = job.payload.componentVersion;
 
-                const path = job.payload.componentPath;
-                const result = await analyzeGitRepo(path);
+                try {
+                    const path = job.payload.componentPath;
+                    const result = await analyzeGitRepo(path);
 
-                if (result.error) {
-                    console.error(`component scan error : ${job.payload.component} : ${result.error}`);
-                } else {
-                    console.log(`component scan success : ${job.payload.component}`);
+                    if (result.error) {
+                        console.error(`component scan error : ${component} : ${version} : ${result.error}`);
+                        await jobApi.error(result.error, component, version);
+                        console.log(`component error uploaded : ${component} : ${version}`);
+                    } else {
+                        console.log(`component scan success : ${component} : ${version}`);
+                        await jobApi.upload(result, component, version);
+                        console.log(`component scan uploaded : ${component} : ${version}`);
+                    }
+                } catch (e) {
+                    await jobApi.error(e.toString(), component, version);
                 }
-                await jobApi.upload(result, job.payload.component, job.payload.componentVersion);
-                console.log(`component scan uploaded : ${job.payload.component}`);
 
                 await jobApi.finish(job.id);
                 console.log(`job finished : ${job.id}`);
             } else {
-                console.log('no job in db');
+                console.log('no job for fossology');
             }
         } catch (e) {
-            console.error(e);
+            console.error(`error in base thread : ${e.message}`);
         }
         processing = false;
     }
-});
-
+};
 
 const analyzeGitRepo = async (pathToComponent) => {
     console.log(`analyze repo : ${pathToComponent}`);
@@ -127,3 +135,6 @@ const nullableParse = (str) => {
         return null;
     }
 };
+
+scheduler.scheduleJob('*/1 * * * *', iteration);
+iteration();
