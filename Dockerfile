@@ -16,7 +16,7 @@ COPY . .
 
 RUN export PATH=/usr/local/lib/nodejs/node-v10.15.3-linux-x64/bin:$PATH && npm install
 
-EXPOSE 3000
+ENV PROFILE=prod
 
 RUN chmod +x /fossology/docker-entrypoint.sh
 ENTRYPOINT ["/fossology/docker-entrypoint.sh"]
