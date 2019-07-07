@@ -1,10 +1,10 @@
 {
   "local": {
-    "job": "http://localhost:8081",
+    "job": "http://127.0.0.1:8081",
     "jobType": 20
   },
   "prod": {
-    "job": "http://127.0.0.1:8081",
+    "job": "http://oscar-controller:8081",
     "jobType": 20
   }
 }
