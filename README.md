@@ -1,5 +1,7 @@
 # oscar-fossology
 
+### License MIT
+
 This is a small HTTP wrapper around the scanners used in Fossology.
 
 To run locally
